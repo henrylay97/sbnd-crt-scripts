@@ -12,8 +12,17 @@ Steps to run:
 - Adjust the output file path in `run_pair_builder.sh`
 - Run with `source run_pair_builder.sh`
 
+The pair_builder will create an uptput binary file for each input binary file, plus an
+additional txt file with all the processed T1 events (beam spills). This txt file
+is needed for step 2, as it will be correlated with the accelerator database to retrieve
+the POT per spill.
 
 ## Step 2
+
+Run the `parse_spill_files.py` to correlate the T1 spills with the POTs.
+
+
+## Step 3
 
 Convert the files from binary to libCRT ROOT format. The `ConvertRawPairsToRun.C` macro takes as input
 binary files from the previous step, gets the 1D hits from them, makes 2D hits out of every two
@@ -29,3 +38,22 @@ Steps to run:
 - Go in `conversion/`
 - Set the right file paths in `ReprocessAllRuns.sh`
 - Run with `source ReprocessAllRuns.sh`
+
+
+## Step 3 (POT)
+
+Correlate the current entries with the POTs. To be documented.
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1 @@
+root -l 'correlate_with_bnb_database.c("/sbnd/data/users/mdeltutt/crt_data/beam_converted_merged/merged_beam_all_libcrt.root", "/sbnd/data/users/mdeltutt/crt_data/pot/BNB_TS_2017-18.root", "/sbnd/data/users/mdeltutt/crt_data/pot/pot_crt_correlated_tree.root")'
