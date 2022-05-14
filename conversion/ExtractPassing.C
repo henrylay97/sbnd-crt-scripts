@@ -19,6 +19,10 @@ void ExtractPassing(const char *fname1="",const char *ofname="")
   run=new CRTRun();
   run->CreateNewDataRun(ofname);
   run->ExtractPassingTracks(run1,100);
+  run->AddPOTAndNSpills(run1->rheader->POT, run1->rheader->NSpills);
+  run->rheader->POT = run1->rheader->POT;
+  run->rheader->NSpills = run1->rheader->NSpills;
+
  // run->BuildIndex("h2d.s","int(h2d.t0)");
   run->PrintSummary();
 
