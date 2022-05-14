@@ -11,7 +11,11 @@ std::vector<double> _z;
 std::vector<int> _nhits1;
 std::vector<int> _nhits2;
 std::vector<bool> _calibrated;
-std::vector<double> _Edep;
+std::vector<double> _Edep_igor;
+std::vector<double> _edep;
+std::vector<double> _edep_nogain;
+std::vector<double> _edep_h1;
+std::vector<double> _edep_h2;
 
 // Int_t _hit1_max_adc;
 // Int_t _hit2_max_adc;
@@ -36,7 +40,11 @@ void clear_vectors() {
     _nhits1.clear();
     _nhits2.clear();
     _calibrated.clear();
-    _Edep.clear();
+    _Edep_igor.clear();
+    _edep.clear();
+    _edep_nogain.clear();
+    _edep_h1.clear();
+    _edep_h2.clear();
 }
 
 
@@ -49,7 +57,7 @@ void flat_crt_tree() {
     // gSystem->Load("/sbnd/app/users/mdeltutt/Projects/CRTData/libCRT/lib/libCRT.so");
 
     // Oputput
-    TFile* _out_file = TFile::Open("out_flat_crt_tree.root","RECREATE");
+    TFile* _out_file = TFile::Open("out_flat_crt_tree_nogain.root","RECREATE");
 
     TTree* _tree = new TTree("t", "CRT Flat TTree");
     // Standard variables
@@ -65,7 +73,11 @@ void flat_crt_tree() {
     _tree->Branch("nhits1", "std::vector<int>", &_nhits1);
     _tree->Branch("nhits2", "std::vector<int>", &_nhits2);
     _tree->Branch("calibrated", "std::vector<bool>", &_calibrated);
-    _tree->Branch("Edep", "std::vector<double>", &_Edep);
+    _tree->Branch("Edep_igor", "std::vector<double>", &_Edep_igor);
+    _tree->Branch("edep", "std::vector<double>", &_edep);
+    _tree->Branch("edep_nogain", "std::vector<double>", &_edep_nogain);
+    _tree->Branch("edep_h1", "std::vector<double>", &_edep_h1);
+    _tree->Branch("edep_h2", "std::vector<double>", &_edep_h2);
 
 
     // _tree->Branch("t0", &_t0, "t0/D");
@@ -141,7 +153,25 @@ void flat_crt_tree() {
             _nhits1.push_back(h2d->nhits1);
             _nhits2.push_back(h2d->nhits2);
             _calibrated.push_back(h2d->calibrated);
-            _Edep.push_back(h2d->Edep);
+            _Edep_igor.push_back(h2d->Edep);
+
+            // Get the associated 1D hits
+            CRTRawhit raw_hit_1 = h2d->rhit[0];
+            CRTRawhit raw_hit_2 = h2d->rhit[1];
+            int raw_hit1_max_adc = raw_hit_1.GetMaxStripValue();
+            int raw_hit2_max_adc = raw_hit_2.GetMaxStripValue();
+            int raw_hit1_max_adc_idx = raw_hit_1.GetMaxStripIndex();
+            int raw_hit2_max_adc_idx = raw_hit_2.GetMaxStripIndex();
+            int raw_hit1_pedestal = cal->ADCPedestal[raw_hit_1.mac5][raw_hit1_max_adc_idx];
+            int raw_hit2_pedestal = cal->ADCPedestal[raw_hit_2.mac5][raw_hit2_max_adc_idx];
+            int raw_hit1_gain = cal->ADCGain[raw_hit_1.mac5][raw_hit1_max_adc_idx];
+            int raw_hit2_gain = cal->ADCGain[raw_hit_2.mac5][raw_hit2_max_adc_idx];
+            double Edep1 = (raw_hit1_max_adc - raw_hit1_pedestal)/((double)raw_hit1_gain);
+            double Edep2 = (raw_hit2_max_adc - raw_hit2_pedestal)/((double)raw_hit2_gain);
+            _edep.push_back(Edep1 + Edep2);
+            _edep_nogain.push_back((raw_hit1_max_adc - raw_hit1_pedestal) + (raw_hit2_max_adc - raw_hit2_pedestal));
+            _edep_h1.push_back(Edep1);
+            _edep_h2.push_back(Edep2);
         }
         // _t0 = h2d->t0;
         // _t1 = h2d->t1;
@@ -156,9 +186,22 @@ void flat_crt_tree() {
         // _calibrated = h2d->calibrated;
         // _Edep = h2d->Edep;
 
-        // Get the associated 1D hits
-        // CRTRawhit raw_hit_1 = h2d->rhit[0];
-        // CRTRawhit raw_hit_2 = h2d->rhit[1];
+            // // Get the associated 1D hits
+            // CRTRawhit raw_hit_1 = h2d->rhit[0];
+            // CRTRawhit raw_hit_2 = h2d->rhit[1];
+            // int raw_hit1_max_adc = raw_hit_1.GetMaxStripValue();
+            // int raw_hit2_max_adc = raw_hit_2.GetMaxStripValue();
+            // int raw_hit1_max_adc_idx = raw_hit_1.GetMaxStripIndex();
+            // int raw_hit2_max_adc_idx = raw_hit_2.GetMaxStripIndex();
+            // int raw_hit1_pedestal = cal->ADCPedestal[raw_hit_1.mac5][raw_hit1_max_adc_idx];
+            // int raw_hit2_pedestal = cal->ADCPedestal[raw_hit_2.mac5][raw_hit2_max_adc_idx];
+            // int raw_hit1_gain = cal->ADCGain[raw_hit_1.mac5][raw_hit1_max_adc_idx];
+            // int raw_hit2_gain = cal->ADCGain[raw_hit_2.mac5][raw_hit2_max_adc_idx];
+            // double Edep1 = (raw_hit1_max_adc - raw_hit1_pedestal)/((double)raw_hit1_gain);
+            // double Edep2 = (raw_hit2_max_adc - raw_hit2_pedestal)/((double)raw_hit2_gain);
+            // _hit2d_1_edep.push_back(Edep1 + Edep2);
+            // _hit2d_1_hit1_edep.push_back(Edep1);
+            // _hit2d_1_hit2_edep.push_back(Edep2);
 
         // // float Edep = 2.1 * (raw_hit_1.GetMaxStripValue() + raw_hit_2.GetMaxStripValue()) / 2. / 1000.;
 
