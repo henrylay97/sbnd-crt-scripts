@@ -10,7 +10,7 @@ import datetime
 TIME_SECOND_RESOLUTION = 3
 TIME_MILLISECOND_RESOLUTION = 50 # BNB spills have the potential to come as close to each other as ~67 ms (15 Hz). Using 50 ms here to be sure.
 JAN1_2017 = 1483228800
-BNB_FILE_PATH = '/sbnd/app/users/mdeltutt/Projects/CRTData/file_processing/pot/extract_from_database/'
+BNB_FILE_PATH = '/sbnd/data/users/mdeltutt/crt_data/pot/extract_from_database/'
 N_BNB_FILE_TO_OPEN = 5
 
 parser = argparse.ArgumentParser(description='Process spill files.')
@@ -173,7 +173,8 @@ out_df.to_csv(args.file + '.pot.txt')
 
 # Write the total POT on a separate file
 f = open(args.file + '.totalpot.txt', "w")
-f.write(str(np.sum(out_pot)))
+f.write(str(np.sum(out_pot)) + '\n') # total pot
+f.write(str(len(out_pot))) # number of spills
 f.close()
 
 
