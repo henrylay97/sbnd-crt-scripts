@@ -8,18 +8,7 @@
 
 #define T1DELAY 40000 // trigger delay in ns, set in HighLand Delay unit
 
-#define DEBUG false
-
-// // Marco's Interpretation
-// typedef struct {
-//   UShort_t mac5; // FEB address (MAC5)
-//   UShort_t flags; // Event flags
-//   UShort_t lostcpu; // Lost events in CPU for current poll so far
-//   UShort_t lostfpga; // Lost events in FPGA for current poll so far
-//   Int_t ts0; // Time stamp from T0 counter, ns
-//   Int_t ts1; // Time stamp from T1 counter, ns
-//   UShort_t adc[32]; // Pointed to SiPM pulse height ADC array
-// } EVENT_t_pac; // sizeof -> 80
+#define DEBUG true
 
 typedef struct {
   uint16_t mac5;
@@ -60,6 +49,7 @@ FILE *data_file = 0;
 char buf[EVENTLEN];
 char ofname[256];
 char fname_full[256];
+char potfname[256];
 Int_t sec=0;
 int32_t tts1;
 void ConvertRawPairsToRun(const char *datadir="", const char *fname="", const char *outdir="")
@@ -84,6 +74,49 @@ void ConvertRawPairsToRun(const char *datadir="", const char *fname="", const ch
   int EndOfFile=0;
   int hitsinev=0;
 
+  // POT
+  sprintf(potfname, "%s/%s.spills.txt.totalpot.txt", datadir, fname);
+  std::cout << "Using POT file: " << potfname << std::endl;
+  FILE *potfile = fopen(potfname, "r");
+  double totalpot = 0;
+  double totalspills = 0;
+  fscanf(potfile, "%lf", &totalpot);
+  fscanf(potfile, "%lf", &totalspills);
+  std::cout << "Total POT: " << totalpot << std::endl;
+  std::cout << "Total SPILLS: " << totalspills << std::endl;
+
+  run->AddPOTAndNSpills(totalpot, totalspills);
+  // run->AddNSpills(totalspills);
+  run->rheader->POT = totalpot;
+  run->rheader->NSpills = totalspills;
+
+  // // *** An additional, simplified tree, to put things in larsoft
+  // char simple_ofname[256];
+  // sprintf(simple_ofname, "%s/%s.flat.root", outdir, fname);
+  // TFile* out_file = TFile::Open(simple_ofname,"RECREATE");
+  // TTree* tree = new TTree("tree", "CRT Flat TTree");
+  // UShort_t _mac5;
+  // Int_t _ts0;
+  // Int_t _ts1;
+  // std::vector<UShort_t> _adc;
+  // Int_t _s;
+  // Int_t _ms;
+  // tree->Branch("mac5", &_mac5, "mac5/s");
+  // tree->Branch("ts0", &_ts0, "ts0/I");
+  // tree->Branch("ts1", &_ts1, "ts1/s");
+  // tree->Branch("adc", "std::vector<UShort_t>", &_adc);
+  // tree->Branch("s", &_s, "s/s");
+  // tree->Branch("ms", &_ms, "ms/s");
+
+  // TTree* treeaux = new TTree("aux", "CRT Flat TTree Aux");
+  // Double_t _pot, _spills;
+  // treeaux->Branch("pot", &_pot, "pot/D");
+  // treeaux->Branch("spills", &_spills, "spills/D");
+  // _pot = totalpot;
+  // _spills = totalspills;
+  // treeaux->Fill();
+  // // ***
+
   while(!EndOfFile)
  // while(evsread<20000)
   {
@@ -91,6 +124,7 @@ void ConvertRawPairsToRun(const char *datadir="", const char *fname="", const ch
     if(fread(&(evbufr[0]), EVENTLEN, 1, data_file) <= 0) {EndOfFile=1; break;};
     if(fread(&(evbufr[1]), EVENTLEN, 1, data_file) <= 0) {EndOfFile=1; break;};
     if(fread(&(evbufr[2]), EVENTLEN, 1, data_file) <= 0) {EndOfFile=1; break;};
+    // if (evbufr[0].ts1 < 0) std::cout << "------------ " << evbuf[0].ts1 << std::endl;
 
     for(int i=0;i<3;i++)
     {
@@ -102,7 +136,7 @@ void ConvertRawPairsToRun(const char *datadir="", const char *fname="", const ch
 
       if(evbufr[i].ts1>4e9){ evbuf[i].ts1=-(evbufr[i].ts1-4e9);}
       else evbuf[i].ts1=evbufr[i].ts1;
-//        printf("t1=%d t1=%d\n",evbufr[i].ts1,evbuf[i].ts1);
+      // printf("t1=%i t1=%u\n",evbufr[i].ts1,evbuf[i].ts1);
 
       memcpy(&(evbuf[i].adc[0]),&(evbufr[i].adc[0]),32*2);
     }
@@ -152,6 +186,29 @@ void ConvertRawPairsToRun(const char *datadir="", const char *fname="", const ch
       }
     }
 
+    // // *** for simple tree
+    // _mac5 = evbuf[0].mac5;
+    // _ts0 = evbuf[0].ts0;
+    // _ts1 = evbuf[0].ts1;
+    // _s = evbuf[0].s;
+    // _ms = evbuf[0].ms;
+    // _adc.resize(32);
+    // for (int i = 0; i < 32; i++) _adc[i] = evbuf[0].adc[i];
+    // tree->Fill();
+
+    // _mac5 = evbuf[1].mac5;
+    // _ts0 = evbuf[1].ts0;
+    // _ts1 = evbuf[1].ts1;
+    // _s = evbuf[1].s;
+    // _ms = evbuf[1].ms;
+    // _adc.resize(32);
+    // for (int i = 0; i < 32; i++) _adc[i] = evbuf[1].adc[i];
+    // tree->Fill();
+    // // *** for simple tree
+
+    run->AddRawhit(&(evbuf[0]));
+    run->AddRawhit(&(evbuf[1]));
+
     // std::cout << "Here 5" << std::endl;
     h2d = new CRT2Dhit(&(evbuf[0]), &(evbuf[1]), cal);
     if (DEBUG) {
@@ -179,6 +236,14 @@ void ConvertRawPairsToRun(const char *datadir="", const char *fname="", const ch
   run->BuildIndex("h2d.s","int(h2d.t0)");
   run->PrintSummary();
   run->Close();
+
+  // // *** Simple tree
+  // out_file->cd();
+  // tree->Write("tree",TObject::kOverwrite);
+  // treeaux->Write("treeaux ",TObject::kOverwrite);
+  // out_file->Purge();
+  // out_file->Close();
+  // // *** Simple tree
 }
 
 /*
