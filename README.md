@@ -1,5 +1,13 @@
 # Processing of the CRT data files
 
+## Step 0
+
+# Get BNB POT info from database
+
+Use the scripts `pot/extract201*.sh` to download the BNB spill information for all the days in 2017 and 2018. These scripts will create a file for each day containing `second, millisecond, pot` information for each spill from the accelerator database. These files are created in txt format. Run the script `database_to_pickle.py` to have them in pkl format as well.
+Copy the folder `extract_from_database` into the sbnd/data area: `/sbnd/data/users/mdeltutt/crt_data/pot/`.
+
+
 ## Step 1
 
 Run the `pair_builder` to extract beam-triggered events. 
@@ -43,6 +51,8 @@ Steps to run:
 ## Step 3 (POT)
 
 Correlate the current entries with the POTs. To be documented.
+
+
 
 
 
