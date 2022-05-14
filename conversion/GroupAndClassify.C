@@ -18,7 +18,11 @@ void GroupAndClassify(const char *fname1="",const char *ofname="")
 
   run=new CRTRun();
   run->CreateNewDataRun(ofname);
-  run->GroupAndClassify(run1,100);
+  run->AddPOTAndNSpills(run1->rheader->POT, run1->rheader->NSpills);
+  run->rheader->POT = run1->rheader->POT;
+  run->rheader->NSpills = run1->rheader->NSpills;
+
+  run->GroupAndClassify(run1, 50000); // was 100, using 50 ms
   run->BuildIndex("h2d[0].s","int(h2d[0].t0)");
   run->PrintSummary();
 
