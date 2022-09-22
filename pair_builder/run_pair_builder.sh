@@ -14,9 +14,7 @@ outdir="/sbnd/data/users/mdeltutt/crt_data/beam_with_pot/"
 
 
 # for f in $datadir*Run2017121?_*-sbndcrt01.*
-for f in $datadir*Run*_*-sbndcrt0?.*
-# for f in $datadir*Run20170623_15213?-sbndcrt02.1
-# for f in $datadir*Run201806??_*-sbndcrt02.1
+for f in $datadir*Run2017*_*-sbndcrt0?.*
 do
     echo "Running pair builder on file $f"
 
