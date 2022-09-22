@@ -1,3 +1,5 @@
+# Correlates T1 events with BNB spills
+# Usage:
 # python parse_spill_files.py --file  /sbnd/data/users/mdeltutt/crt_data/test/test02___.spills.txt
 
 import os.path
