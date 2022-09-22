@@ -8,7 +8,7 @@
 
 #define T1DELAY 40000 // trigger delay in ns, set in HighLand Delay unit
 
-#define DEBUG true
+#define DEBUG false
 
 typedef struct {
   uint16_t mac5;
