@@ -54,8 +54,8 @@ The `ConvertRawPairsToRun.C` macro takes as input
 binary files from the previous step, gets the 1D hits from them, makes 2D hits out of every two
 coincident 1D hits, and saves all these hits in libCRT format to an output ROOT file.
 
-Orignal libCRT: https://github.com/kreslo/libCRT
-Currently used libCRT: https://github.com/marcodeltutto/libCRT
+- Orignal libCRT: https://github.com/kreslo/libCRT
+- Currently used libCRT: https://github.com/marcodeltutto/libCRT
 
 After this step, one can merge all the output ROOT files into one.
 
