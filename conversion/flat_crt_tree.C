@@ -17,6 +17,19 @@ std::vector<double> _edep_nogain;
 std::vector<double> _edep_h1;
 std::vector<double> _edep_h2;
 
+std::vector<double> _hit1_feb;
+std::vector<double> _hit1_t0;
+std::vector<double> _hit1_t1;
+std::vector<std::vector<UShort_t>> _hit1_adc;
+
+std::vector<double> _hit2_feb;
+std::vector<double> _hit2_t0;
+std::vector<double> _hit2_t1;
+std::vector<std::vector<UShort_t>> _hit2_adc;
+
+double _pot;
+double _spills;
+
 // Int_t _hit1_max_adc;
 // Int_t _hit2_max_adc;
 // Int_t _hit1_max_adc_idx;
@@ -45,11 +58,21 @@ void clear_vectors() {
     _edep_nogain.clear();
     _edep_h1.clear();
     _edep_h2.clear();
+
+    _hit1_feb.clear();
+    _hit1_t0.clear();
+    _hit1_t1.clear();
+    _hit1_adc.clear();
+
+    _hit2_feb.clear();
+    _hit2_t0.clear();
+    _hit2_t1.clear();
+    _hit2_adc.clear();
 }
 
 
 
-void flat_crt_tree() {
+void flat_crt_tree(const char *inputfile="", const char *outfile="") {
 
     TStopwatch t;
     t.Start();
@@ -57,7 +80,9 @@ void flat_crt_tree() {
     // gSystem->Load("/sbnd/app/users/mdeltutt/Projects/CRTData/libCRT/lib/libCRT.so");
 
     // Oputput
-    TFile* _out_file = TFile::Open("out_flat_crt_tree_nogain.root","RECREATE");
+    // TFile* _out_file = TFile::Open("out_flat_crt_tree_nogain.root","RECREATE");
+    // TFile* _out_file = TFile::Open("test_flat_crt_tree.root","RECREATE");
+    TFile* _out_file = TFile::Open(outfile,"RECREATE");
 
     TTree* _tree = new TTree("t", "CRT Flat TTree");
     // Standard variables
@@ -79,7 +104,19 @@ void flat_crt_tree() {
     _tree->Branch("edep_h1", "std::vector<double>", &_edep_h1);
     _tree->Branch("edep_h2", "std::vector<double>", &_edep_h2);
 
+    _tree->Branch("hit1_feb", "std::vector<double>", &_hit1_feb);
+    _tree->Branch("hit1_t0", "std::vector<double>", &_hit1_t0);
+    _tree->Branch("hit1_t1", "std::vector<double>", &_hit1_t1);
+    _tree->Branch("hit1_adc", "std::vector<std::vector<UShort_t>>", &_hit1_adc);
 
+    _tree->Branch("hit2_feb", "std::vector<double>", &_hit2_feb);
+    _tree->Branch("hit2_t0", "std::vector<double>", &_hit2_t0);
+    _tree->Branch("hit2_t1", "std::vector<double>", &_hit2_t1);
+    _tree->Branch("hit2_adc", "std::vector<std::vector<UShort_t>>", &_hit2_adc);
+
+    TTree* _aux_tree = new TTree("aux", "CRT Aux Tree");
+    _aux_tree->Branch("pot", &_pot, "pot/D");
+    _aux_tree->Branch("spills", &_spills, "spills/D");
     // _tree->Branch("t0", &_t0, "t0/D");
     // _tree->Branch("t1", &_t1, "t1/D");
     // _tree->Branch("dt0", &_dt0, "dt0/D");
@@ -111,10 +148,17 @@ void flat_crt_tree() {
 
     CRTRun* run = new CRTRun();
     // run->OpenExistingDataRun("/sbnd/data/users/mdeltutt/crt_data/beam_converted_merged/merged_beam_Dec2017_libcrt.root");
-    run->OpenExistingDataRun("/sbnd/data/users/mdeltutt/crt_data/beam_converted_merged/merged_beam_all_libcrt.classified.root");
+    // run->OpenExistingDataRun("/sbnd/data/users/mdeltutt/crt_data/beam_converted_merged/merged_beam_all_libcrt.classified.root");
+    // run->OpenExistingDataRun("/sbnd/data/users/mdeltutt/crt_data/beam_converted_may2022/ProdRun20170626_081006.beam.classified.root");
+    run->OpenExistingDataRun(inputfile);
 
     size_t n_entries = run->t->GetEntries();
     std::cout << "Number of entries: " << n_entries << std::endl;
+
+    _pot = run->rheader->POT;
+    _spills = run->rheader->NSpills;
+    std::cout << "Number of POT: " << _pot << std::endl;
+    _aux_tree->Fill();
 
     for (size_t i = 0; i < n_entries; i++) {
 
@@ -172,6 +216,20 @@ void flat_crt_tree() {
             _edep_nogain.push_back((raw_hit1_max_adc - raw_hit1_pedestal) + (raw_hit2_max_adc - raw_hit2_pedestal));
             _edep_h1.push_back(Edep1);
             _edep_h2.push_back(Edep2);
+
+            std::vector<UShort_t> temp(32);
+
+            _hit1_feb.push_back(raw_hit_1.mac5);
+            _hit1_t0.push_back(raw_hit_1.ts0);
+            _hit1_t1.push_back(raw_hit_1.ts1);
+            for (int i = 0; i < 32; i++) temp[i] = raw_hit_1.adc[i];
+            _hit1_adc.push_back(temp);
+
+            _hit2_feb.push_back(raw_hit_2.mac5);
+            _hit2_t0.push_back(raw_hit_2.ts0);
+            _hit2_t1.push_back(raw_hit_2.ts1);
+            for (int i = 0; i < 32; i++) temp[i] = raw_hit_2.adc[i];
+            _hit2_adc.push_back(temp);
         }
         // _t0 = h2d->t0;
         // _t1 = h2d->t1;
@@ -238,6 +296,7 @@ void flat_crt_tree() {
     // _tree->Print();
     _out_file->cd();
     _tree->Write();
+    _aux_tree->Write();
     _out_file->Close();
 
     t.Stop();
