@@ -17,11 +17,13 @@ std::vector<double> _edep_nogain;
 std::vector<double> _edep_h1;
 std::vector<double> _edep_h2;
 
+std::vector<UShort_t> _hit1_flags;
 std::vector<double> _hit1_feb;
 std::vector<double> _hit1_t0;
 std::vector<double> _hit1_t1;
 std::vector<std::vector<UShort_t>> _hit1_adc;
 
+std::vector<UShort_t> _hit2_flags;
 std::vector<double> _hit2_feb;
 std::vector<double> _hit2_t0;
 std::vector<double> _hit2_t1;
@@ -59,11 +61,13 @@ void clear_vectors() {
     _edep_h1.clear();
     _edep_h2.clear();
 
+    _hit1_flags.clear();
     _hit1_feb.clear();
     _hit1_t0.clear();
     _hit1_t1.clear();
     _hit1_adc.clear();
 
+    _hit2_flags.clear();
     _hit2_feb.clear();
     _hit2_t0.clear();
     _hit2_t1.clear();
@@ -104,11 +108,13 @@ void flat_crt_tree(const char *inputfile="", const char *outfile="") {
     _tree->Branch("edep_h1", "std::vector<double>", &_edep_h1);
     _tree->Branch("edep_h2", "std::vector<double>", &_edep_h2);
 
+    _tree->Branch("hit1_flags", "std::vector<UShort_t>", &_hit1_flags);
     _tree->Branch("hit1_feb", "std::vector<double>", &_hit1_feb);
     _tree->Branch("hit1_t0", "std::vector<double>", &_hit1_t0);
     _tree->Branch("hit1_t1", "std::vector<double>", &_hit1_t1);
     _tree->Branch("hit1_adc", "std::vector<std::vector<UShort_t>>", &_hit1_adc);
 
+    _tree->Branch("hit2_flags", "std::vector<UShort_t>", &_hit2_flags);
     _tree->Branch("hit2_feb", "std::vector<double>", &_hit2_feb);
     _tree->Branch("hit2_t0", "std::vector<double>", &_hit2_t0);
     _tree->Branch("hit2_t1", "std::vector<double>", &_hit2_t1);
@@ -219,12 +225,14 @@ void flat_crt_tree(const char *inputfile="", const char *outfile="") {
 
             std::vector<UShort_t> temp(32);
 
+            _hit1_flags.push_back(raw_hit_1.flags);
             _hit1_feb.push_back(raw_hit_1.mac5);
             _hit1_t0.push_back(raw_hit_1.ts0);
             _hit1_t1.push_back(raw_hit_1.ts1);
             for (int i = 0; i < 32; i++) temp[i] = raw_hit_1.adc[i];
             _hit1_adc.push_back(temp);
 
+            _hit2_flags.push_back(raw_hit_2.flags);
             _hit2_feb.push_back(raw_hit_2.mac5);
             _hit2_t0.push_back(raw_hit_2.ts0);
             _hit2_t1.push_back(raw_hit_2.ts1);
